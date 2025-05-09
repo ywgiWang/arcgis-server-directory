@@ -35,12 +35,20 @@ fastify.addHook('onRequest', async (request, reply) => {
 
             // 设置状态码
             reply.code(resp2.status);
+            // 移除可能重复的Content-Length和Transfer-Encoding头部
+            if (resp2.headers['content-length']) {
+                delete resp2.headers['content-length'];
+            }
+            if (resp2.headers['transfer-encoding']) {
+                delete resp2.headers['transfer-encoding'];
+            }
             // 复制所有响应头
             Object.entries(resp2.headers).forEach(([key, value]) => {
                 reply.header(key, value);
             });
             // 返回响应体
             if (resp2.headers['content-type'] && resp2.headers['content-type'].includes('image/png')) {
+
                 return reply.type('image/png').send(Buffer.from(resp2.data));
             }
             return reply.send(resp2.data);
@@ -72,7 +80,7 @@ fastify.addHook('onRequest', async (request, reply) => {
 
 // 启动服务器
 //高版本fastify需要指定host，否则除本机外无法访问
-fastify.listen({ port: 6081 ,host:"0.0.0.0"}, (err) => {
+fastify.listen({ port: 6081, host: "0.0.0.0" }, (err) => {
     if (err) {
         fastify.log.error(err);
         process.exit(1);
