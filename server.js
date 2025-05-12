@@ -2,7 +2,7 @@ const fastify = require('fastify')();
 const axios = require('axios');
 const sqlite3 = require('sqlite3').verbose();
 const db = new sqlite3.Database('./access_logs.db');
-
+const config = require("./config.js");
 // 创建访问日志表
 db.serialize(() => {
     db.run("CREATE TABLE IF NOT EXISTS access_logs (id INTEGER PRIMARY KEY AUTOINCREMENT, url TEXT, account TEXT, access_time DATETIME DEFAULT CURRENT_TIMESTAMP)");
@@ -14,11 +14,9 @@ db.serialize(() => {
 fastify.addHook('onRequest', async (request, reply) => {
     if (request.url.startsWith('/arcgis') && !request.url.startsWith('/arcgis/tokens/generateToken')) {
         const token = request.query.token;
-
         if (!token) {
             return reply.code(403).send({ error: 'Token is required' });
         }
-
         try {
             // 验证token有效性
             const response = await axios.get(`http://localhost:6080/arcgis/rest/services?f=json&token=${token}`);
